@@ -1,61 +1,22 @@
 {
   "metadata": {
     "slot_name": "new_game",
-    "timestamp": "2025-11-24T15:48:36.283561",
+    "timestamp": "2025-11-25T16:10:38.522905",
     "version": "1.0"
   },
   "game_data": {
     "current_chapter": 1,
-    "current_scene": "lewati_lab",
-    "checkpoint": "lewati_lab",
-    "inventory": [
-      "Senter",
-      "Peta sekolah"
-    ],
-    "choices_history": [
-      {
-        "scene": "start",
-        "choice": "Cari senter di ruang guru",
-        "target": "cari_senter"
-      },
-      {
-        "scene": "cari_senter",
-        "choice": "Ambil senter dan explore",
-        "target": "explore_dengan_senter"
-      },
-      {
-        "scene": "explore_dengan_senter",
-        "choice": "Lihat peta dan cari exit",
-        "target": "lihat_peta"
-      },
-      {
-        "scene": "lihat_peta",
-        "choice": "Lewati laboratorium",
-        "target": "lewati_lab"
-      },
-      {
-        "scene": "lewati_lab",
-        "choice": "Periksa eksperimen",
-        "target": "periksa_eksperimen"
-      },
-      {
-        "scene": "lewati_lab",
-        "choice": "Periksa eksperimen",
-        "target": "periksa_eksperimen"
-      },
-      {
-        "scene": "lewati_lab",
-        "choice": "Langsung lewati",
-        "target": "lewati_cepat"
-      }
-    ],
+    "current_scene": "start",
+    "checkpoint": "start",
+    "inventory": [],
+    "choices_history": [],
     "player_stats": {
       "health": 100,
-      "sanity": 65,
-      "discovered_secrets": 7
+      "sanity": 100,
+      "discovered_secrets": 0
     },
     "flags": {},
-    "play_time": 360,
-    "created_at": "2025-11-24T15:48:07.751073"
+    "play_time": 0,
+    "created_at": "2025-11-25T16:10:38.522905"
   }
 }

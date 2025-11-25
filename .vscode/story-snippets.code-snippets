@@ -1,0 +1,136 @@
+{
+  "Scene Command - Full": {
+    "scope": "plaintext",
+    "prefix": ["scene", "scen", "sce", "sc", "s", "\\s"],
+    "body": "\\scene ${1:scene_name}",
+    "description": "Create new scene: \\scene name"
+  },
+  
+  "Goto Command - Full": {
+    "scope": "plaintext",
+    "prefix": ["goto", "got", "go", "g", "\\g"],
+    "body": "\\goto ${1:target_scene}",
+    "description": "Go to scene: \\goto target"
+  },
+  
+  "Choice Command - Full": {
+    "scope": "plaintext",
+    "prefix": ["choice", "choic", "choi", "cho", "ch", "c", "\\c"],
+    "body": "\\choice \"${1:choice_text}\" goto ${2:target_scene}",
+    "description": "Add choice: \\choice \"text\" goto target"
+  },
+  
+  "Bold Command - Full": {
+    "scope": "plaintext",
+    "prefix": ["bold", "bol", "bo", "b", "\\b"],
+    "body": "\\bold \"${1:TEXT}\"",
+    "description": "Bold text: \\bold \"TEXT\""
+  },
+  
+  "Clear Command - Full": {
+    "scope": "plaintext",
+    "prefix": ["clear", "clea", "cle", "cl", "\\cl"],
+    "body": "\\clear",
+    "description": "Clear screen: \\clear"
+  },
+  
+  "Divider Command - Full": {
+    "scope": "plaintext",
+    "prefix": ["divider", "divid", "divi", "div", "di", "d", "\\d"],
+    "body": "\\divider ${1|-,=,*,~, |}",
+    "description": "Add divider: \\divider symbol"
+  },
+  
+  "Pause Command - Full": {
+    "scope": "plaintext",
+    "prefix": ["pause", "paus", "pau", "pa", "p", "\\p"],
+    "body": "\\pause \"${1:Press Enter to continue...}\"",
+    "description": "Pause execution: \\pause \"message\""
+  },
+  
+  "Progress Command - Full": {
+    "scope": "plaintext",
+    "prefix": ["progress", "progres", "progre", "progr", "prog", "pro", "pr", "p", "\\pr", "load"],
+    "body": "\\progress ${1:2} \"${2:Loading...}\"",
+    "description": "Progress bar: \\progress seconds \"message\""
+  },
+  
+  "Loading Command - Full": {
+    "scope": "plaintext",
+    "prefix": ["loading", "loadin", "loadi", "load", "lo", "l", "\\l"],
+    "body": "\\loading ${1:2} \"${2:Thinking...}\"",
+    "description": "Loading spinner: \\loading seconds \"message\""
+  },
+  
+  "Red Color - Full": {
+    "scope": "plaintext",
+    "prefix": ["$red", "$r", "red"],
+    "body": "\\$red ${1:text}",
+    "description": "Red text: $red text"
+  },
+  
+  "Green Color - Full": {
+    "scope": "plaintext",
+    "prefix": ["$green", "$g", "green"],
+    "body": "\\$green ${1:text}",
+    "description": "Green text: $green text"
+  },
+  
+  "Blue Color - Full": {
+    "scope": "plaintext",
+    "prefix": ["$blue", "$b", "blue"],
+    "body": "\\$blue ${1:text}",
+    "description": "Blue text: $blue text"
+  },
+  
+  "Yellow Color - Full": {
+    "scope": "plaintext",
+    "prefix": ["$yellow", "$y", "yellow"],
+    "body": "\\$yellow ${1:text}",
+    "description": "Yellow text: $yellow text"
+  },
+  
+  "Cyan Color - Full": {
+    "scope": "plaintext",
+    "prefix": ["$cyan", "$c", "cyan"],
+    "body": "\\$cyan ${1:text}",
+    "description": "Cyan text: $cyan text"
+  },
+  
+  "Magenta Color - Full": {
+    "scope": "plaintext",
+    "prefix": ["$magenta", "$m", "magenta"],
+    "body": "\\$magenta ${1:text}",
+    "description": "Magenta text: $magenta text"
+  },
+  
+  "All Commands Trigger": {
+    "scope": "plaintext",
+    "prefix": "\\",
+    "body": "\\${1|scene,goto,choice,bold,clear,divider,pause,progress,loading|} ${2}",
+    "description": "Show all commands"
+  },
+  
+  "All Colors Trigger": {
+    "scope": "plaintext",
+    "prefix": "$",
+    "body": "\\$${1|red,green,blue,yellow,cyan,magenta|} ${2:text}",
+    "description": "Show all colors"
+  },
+  
+  "Quick Scene Block": {
+    "scope": "plaintext",
+    "prefix": ["qscene", "qs"],
+    "body": [
+      "\\scene ${1:scene_name}",
+      "\\clear",
+      "\\divider =",
+      "${2:scene_content}",
+      "\\divider -",
+      "\\choice \"${3:Option 1}\" goto ${4:target1}",
+      "\\choice \"${5:Option 2}\" goto ${6:target2}",
+      "\\divider ="
+    ],
+    "description": "Quick scene template with choices"
+  }
+}

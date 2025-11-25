@@ -1,0 +1,69 @@
+{
+    "workbench.colorTheme": "Dracula Theme",
+    "workbench.editor.empty.hint": "hidden",
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "emmet.triggerExpansionOnTab": true,
+    "emmet.useInlineCompletions": true,
+    "emmet.excludeLanguages": [
+        "markdown",
+        ""
+    ],
+    "[css]": {
+        "editor.defaultFormatter": "vscode.css-language-features"
+    },
+    "security.workspace.trust.untrustedFiles": "open",
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "explorer.confirmDelete": false,
+    "workbench.iconTheme": "material-icon-theme",
+    "[javascript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "explorer.confirmDragAndDrop": false,
+    "editor.defaultFoldingRangeProvider": "Blackboxapp.blackbox",
+    "editor.formatOnType": true,
+    "editor.defaultFormatter": "Blackboxapp.blackbox",
+    "python.createEnvironment.trigger": "off",
+    "background.windowBackgrounds": [
+        "c:/Users/naeko/Downloads/undefined - Imgur.gif"
+    ],
+    "background.backgroundOpacity": [
+        0,
+        0.1,
+        0.1,
+        0.1
+    ],
+    "background.backgroundBlur": [
+        "0.1",
+        "0",
+        "0",
+        "0"
+    ],
+    "[vue]": {
+        "editor.defaultFormatter": "Vue.volar"
+    },
+      
+  "files.associations": {
+    "*.story": "plaintext"
+  },
+  "[plaintext]": {
+    "editor.snippetSuggestions": "top",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
+    "editor.suggest.showSnippets": true,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.tabCompletion": "on",
+    "editor.acceptSuggestionOnCommitCharacter": true,
+    "editor.wordBasedSuggestions": "matchingDocuments",
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.suggest.localityBonus": true,
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "editor.unicodeHighlight.invisibleCharacters": false
+  }
+}

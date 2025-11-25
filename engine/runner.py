@@ -1,4 +1,5 @@
-from .utils import slow_print, console, input_no_empty
+from .utils import slow_print, console, input_no_empty ,clear, divider, pause,progress_bar
+from engine.battle import BattleManager
 from rich.text import Text
 from rich.panel import Panel
 
@@ -21,7 +22,7 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
     while True:
         if current not in scenes:
             slow_print(f"[Scene '{current}' tidak ditemukan]")
-            break
+            return game_data
 
         commands = scenes[current]
         next_scene = None
@@ -32,6 +33,7 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
         game_data["checkpoint"] = current
 
         for cmd in commands:
+
             if cmd["type"] == "text":
                 slow_print(cmd["text"])
             
@@ -50,6 +52,50 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
             elif cmd["type"] == "choice":
                 choices.append(cmd)
 
+            # CLEAR SCREEN - HANDLE BARU
+            elif cmd["type"] == "clear":
+                clear()
+            
+            # DIVIDER - HANDLE BARU
+            elif cmd["type"] == "divider":
+                divider(cmd.get("symbol", "="))
+            
+            # PAUSE - HANDLE BARU
+            elif cmd["type"] == "pause":
+                pause(cmd.get("message", "\nTekan Enter untuk melanjutkan..."))
+            
+            # PROGRESS BAR - HANDLE BARU
+            elif cmd["type"] == "progress":
+                progress_bar(
+                    cmd.get("duration", 2), 
+                    cmd.get("label", "Memproses")
+                )
+            
+            elif cmd["type"] == "battle":
+                console.print("\n" + "⚔️" * 20, style="bold red")
+                console.print("          PERTARUNGAN DIMULAI!", style="bold red")
+                console.print("⚔️" * 20, style="bold red")
+                
+                result = BattleManager.start_battle(cmd.get("config", {}))
+                
+                if result == "WIN":
+                    slow_print("🎉 Kamu memenangkan pertarungan!")
+                    # Tambah item atau flag untuk kemenangan
+                    if "kemenangan_pertarungan" not in game_data["flags"]:
+                        game_data["flags"]["kemenangan_pertarungan"] = True
+                elif result == "LOSE":
+                    slow_print("💀 Kamu kalah dalam pertarungan...")
+                    return "game_over"  # ← INI MASIH RETURN STRING!
+                elif result == "DRAW":
+                    slow_print("🤝 Pertarungan berakhir seri!")
+                elif result == "SURRENDER":
+                    slow_print("🏳️ Kamu menyerah dalam pertarungan...")
+                    return "game_over"  # ← INI JUGA
+                
+                pause()
+                continue
+
+            
         # AUTO-SAVE SETIAP SCENE BERUBAH
         if save_system and slot_name:
             save_system.create_save(game_data, slot_name)
@@ -93,7 +139,7 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
         if next_scene:
             current = next_scene
             continue
-
+            
         break
 
     return game_data

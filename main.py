@@ -84,15 +84,24 @@ def start_game(save_system, game_data, slot_name):
     
     scenes = parse_story("story/chapter1.story")
     
-    # Pass game_data ke runner untuk continue progress
-    updated_game_data = run_game(scenes, game_data, save_system, slot_name)
+    # run_game bisa return game_data ATAU "game_over"
+    result = run_game(scenes, game_data, save_system, slot_name)
     
-    # Final save
+    # CEK JIKA HASILNYA "game_over"
+    if result == "game_over":
+        print("💀 Game Over! Kembali ke menu utama...")
+        pause("\nTekan Enter untuk kembali ke menu...")
+        return  # Langsung kembali ke menu, tidak save
+    
+    # JIKA NORMAL, result adalah updated_game_data
+    updated_game_data = result
     updated_game_data["play_time"] += 120  # Tambah play time
-    save_system.create_save(updated_game_data, slot_name)
     
-    print(f"💾 Progress tersimpan! Inventory: {updated_game_data['inventory']}")
-
+    # Auto-save progress
+    if save_system.create_save(updated_game_data, slot_name):
+        print("💾 Progress tersimpan!")
+    
+    pause("\nTekan Enter untuk kembali ke menu...")
 
 if __name__ == "__main__":
     try:

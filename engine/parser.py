@@ -15,6 +15,40 @@ def parse_story(path: str):
                 current_scene = parts[1]
                 buffer = []
                 continue
+            # CLEAR SCREEN 
+            if line.startswith("\\clear"):
+                buffer.append({"type": "clear"})
+                continue
+                
+            # DIVIDER  
+            if line.startswith("\\divider"):
+                parts = line.split(" ", 1)
+                symbol = parts[1] if len(parts) > 1 else "="
+                buffer.append({"type": "divider", "symbol": symbol})
+                continue
+            
+            # PAUSE 
+            if line.startswith("\\pause"):
+                parts = line.split(" ", 1)
+                message = parts[1] if len(parts) > 1 else "\nTekan Enter untuk melanjutkan..."
+                buffer.append({"type": "pause", "message": message})
+                continue
+
+            # PROGRESS BAR 
+            if line.startswith("\\progress"):
+                parts = line.split(" ", 2)
+                duration = float(parts[1]) if len(parts) > 1 else 2
+                label = parts[2] if len(parts) > 2 else "Memproses"
+                buffer.append({"type": "progress", "duration": duration, "label": label})
+                continue
+            
+            # LOADING 
+            if line.startswith("\\loading"):
+                parts = line.split(" ", 2)
+                duration = float(parts[1]) if len(parts) > 1 else 2
+                message = parts[2] if len(parts) > 2 else "Loading"
+                buffer.append({"type": "loading", "duration": duration, "message": message})
+                continue
             
             # CHOICE - FIXED PARSING
             if line.startswith("\\choice"):
@@ -63,7 +97,27 @@ def parse_story(path: str):
             # TEKS BIASA
             if current_scene and line.strip():
                 buffer.append({"type": "text", "text": line})
-
+            
+            # Tambahkan di bagian parsing
+            if line.startswith("\\battle"):
+                # Format: \battle player_hp=100 enemy_hp=100 player_name="Kamu" enemy_name="Hantu"
+                config = {}
+                parts = line.split()
+                
+                for part in parts[1:]:  # Skip \battle
+                    if '=' in part:
+                        key, value = part.split('=', 1)
+                        # Handle string values dengan quotes
+                        if value.startswith('"') and value.endswith('"'):
+                            value = value[1:-1]
+                        # Convert numeric values
+                        elif value.isdigit():
+                            value = int(value)
+                        config[key] = value
+                
+                buffer.append({"type": "battle", "config": config})
+                continue
+            
     if current_scene is not None:
         scenes[current_scene] = buffer
     

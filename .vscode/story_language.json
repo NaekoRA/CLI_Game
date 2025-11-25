@@ -1,0 +1,27 @@
+{
+  "fileTypes": [".story"],
+  "name": "Story Script",
+  "patterns": [
+    {
+      "match": "\\\\scene\\b",
+      "name": "entity.name.type.class.story"
+    },
+    {
+      "match": "\\\\goto\\b",
+      "name": "keyword.control.story"
+    },
+    {
+      "match": "\\\\choice\\b",
+      "name": "keyword.control.story"
+    },
+    {
+      "match": "\\\\bold\\b", 
+      "name": "support.function.story"
+    },
+    {
+      "match": "\\$[a-zA-Z]+",
+      "name": "support.constant.color.story"
+    }
+  ],
+  "scopeName": "source.story"
+}
