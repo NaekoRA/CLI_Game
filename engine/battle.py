@@ -226,11 +226,7 @@ class BattleGame:
 
     def run(self):
         console.print(f"\n⚔️  {self.player_name} vs {self.enemy_name}!", style="bold red")
-        console.print("Serangan kuat butuh 2 turn charging dan TIDAK BISA DIBATALKAN!", style="yellow")
-        console.print("Gunakan strategi yang tepat!", style="yellow")
         
-        pause()
-
         while not self.game_over:
             self.display_ui()
             available_moves = self.display_moves()
@@ -258,18 +254,38 @@ class BattleGame:
                 if winner == "PLAYER":
                     console.print(f"\n🎉 VICTORY! {self.player_name} menang dalam {self.turn_count} turn!", style="bold green")
                     progress_bar(2, "Merayakan kemenangan")
-                    return "WIN"
+                    return {
+                        "result": "WIN",
+                        "turns": self.turn_count,
+                        "player_remaining_hp": self.player_health,
+                        "enemy_remaining_hp": self.enemy_health
+                    }
                 elif winner == "MUSUH":
                     console.print(f"\n💀 DEFEAT! {self.enemy_name} menang dalam {self.turn_count} turn!", style="bold red")
-                    return "LOSE"
+                    return {
+                        "result": "LOSE", 
+                        "turns": self.turn_count,
+                        "player_remaining_hp": self.player_health,
+                        "enemy_remaining_hp": self.enemy_health
+                    }
                 else:
                     console.print(f"\n🤝 DRAW! Keduanya kalah dalam {self.turn_count} turn!", style="bold yellow")
-                    return "DRAW"
+                    return {
+                        "result": "DRAW",
+                        "turns": self.turn_count,
+                        "player_remaining_hp": self.player_health,
+                        "enemy_remaining_hp": self.enemy_health
+                    }
             
             if choice == "e":
                 self.display_ui()
                 console.print(f"\n🏳️  Anda menyerah! {self.enemy_name} menang!", style="red")
-                return "SURRENDER"
+                return {
+                    "result": "SURRENDER",
+                    "turns": self.turn_count,
+                    "player_remaining_hp": self.player_health,
+                    "enemy_remaining_hp": self.enemy_health
+                }
 
 
 # Battle Manager untuk handle dari story

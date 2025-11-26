@@ -2,6 +2,9 @@ from .utils import slow_print, console, input_no_empty ,clear, divider, pause,pr
 from engine.battle import BattleManager
 from rich.text import Text
 from rich.panel import Panel
+from engine.maze import MazeManager
+from maze_maps import MAZE_MAPS
+
 
 def run_game(scenes, game_data=None, save_system=None, slot_name=None):
     if game_data is None:
@@ -71,31 +74,72 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
                     cmd.get("label", "Memproses")
                 )
             
+            # Battle handler
             elif cmd["type"] == "battle":
                 console.print("\n" + "⚔️" * 20, style="bold red")
                 console.print("          PERTARUNGAN DIMULAI!", style="bold red")
                 console.print("⚔️" * 20, style="bold red")
                 
-                result = BattleManager.start_battle(cmd.get("config", {}))
+                battle_result = BattleManager.start_battle(cmd.get("config", {}))
+                outcome = battle_result["result"].lower()
+                
+                # Update game state
+                game_data["flags"]["last_battle"] = outcome
+                game_data["flags"]["last_battle_turns"] = battle_result["turns"]
+                
+                if outcome == "win":
+                    game_data["player_stats"]["battles_won"] = game_data["player_stats"].get("battles_won", 0) + 1
+                elif outcome == "lose":
+                    game_data["player_stats"]["battles_lost"] = game_data["player_stats"].get("battles_lost", 0) + 1
+                    game_data["player_stats"]["sanity"] = max(0, game_data["player_stats"]["sanity"] - 15)
+                
+                # Cari branch target berdasarkan outcome
+                target_scene = cmd["branches"].get(outcome)
+                
+                if target_scene:
+                    # Jika ada branch target, pindah scene
+                    next_scene = target_scene
+                    break
+                else:
+                    # Jika tidak ada branch, lanjut scene berikutnya
+                    pause()
+                    continue
+                
+            #maze handler
+            elif cmd["type"] == "maze":
+                console.print("\n" + "🧭" * 25, style="bold green")
+                console.print("        MAZE CHALLENGE START!", style="bold green")
+                console.print("🧭" * 25, style="bold green")
+                
+                config = cmd.get("config", {})
+                map_name = config.get("map_name", "tutorial")
+                description = config.get("description", "Find your way through the maze!")
+                
+                # Get the maze map
+                maze_map = MAZE_MAPS.get(map_name, MAZE_MAPS["tutorial"])
+                
+                # Start the maze game
+                result = MazeManager.start_maze(maze_map, description)
+                
+                # Update game state based on maze result
+                game_data["flags"]["last_maze"] = map_name
+                game_data["flags"]["last_maze_result"] = result
                 
                 if result == "WIN":
-                    slow_print("🎉 Kamu memenangkan pertarungan!")
-                    # Tambah item atau flag untuk kemenangan
-                    if "kemenangan_pertarungan" not in game_data["flags"]:
-                        game_data["flags"]["kemenangan_pertarungan"] = True
+                    game_data["player_stats"]["mazes_completed"] = game_data["player_stats"].get("mazes_completed", 0) + 1
+                    slow_print("🎉 Kamu berhasil menyelesaikan maze!")
                 elif result == "LOSE":
-                    slow_print("💀 Kamu kalah dalam pertarungan...")
-                    return "game_over"  # ← INI MASIH RETURN STRING!
-                elif result == "DRAW":
-                    slow_print("🤝 Pertarungan berakhir seri!")
-                elif result == "SURRENDER":
-                    slow_print("🏳️ Kamu menyerah dalam pertarungan...")
-                    return "game_over"  # ← INI JUGA
+                    game_data["player_stats"]["sanity"] = max(0, game_data["player_stats"]["sanity"] - 10)
+                    slow_print("💀 Kamu gagal dalam maze...")
+                
+                # Handle special finish codes
+                if result.startswith("F"):
+                    game_data["flags"]["maze_finish_code"] = result
                 
                 pause()
                 continue
 
-            
+                
         # AUTO-SAVE SETIAP SCENE BERUBAH
         if save_system and slot_name:
             save_system.create_save(game_data, slot_name)

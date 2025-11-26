@@ -98,24 +98,43 @@ def parse_story(path: str):
             if current_scene and line.strip():
                 buffer.append({"type": "text", "text": line})
             
-            # Tambahkan di bagian parsing
+            # Battle command dengan branching
             if line.startswith("\\battle"):
-                # Format: \battle player_hp=100 enemy_hp=100 player_name="Kamu" enemy_name="Hantu"
+                config = {}
+                branches = {}
+                parts = line.split()
+                
+                for part in parts[1:]:
+                    if '=' in part:
+                        key, value = part.split('=', 1)
+                        # Handle branch targets
+                        if key in ['win', 'lose', 'draw', 'surrender']:
+                            branches[key] = value
+                        else:
+                            # Handle config values
+                            if value.startswith('"') and value.endswith('"'):
+                                value = value[1:-1]
+                            elif value.isdigit():
+                                value = int(value)
+                            config[key] = value
+                
+                buffer.append({"type": "battle", "config": config, "branches": branches})
+                continue
+            
+            # Add maze command parsing
+            if line.startswith("\\maze"):
+                # Format: \maze map_name="forest" description="Escape the forest!"
                 config = {}
                 parts = line.split()
                 
-                for part in parts[1:]:  # Skip \battle
+                for part in parts[1:]:
                     if '=' in part:
                         key, value = part.split('=', 1)
-                        # Handle string values dengan quotes
                         if value.startswith('"') and value.endswith('"'):
                             value = value[1:-1]
-                        # Convert numeric values
-                        elif value.isdigit():
-                            value = int(value)
                         config[key] = value
                 
-                buffer.append({"type": "battle", "config": config})
+                buffer.append({"type": "maze", "config": config})
                 continue
             
     if current_scene is not None:

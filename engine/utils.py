@@ -183,4 +183,13 @@ def input_no_empty(prompt):
                 sys.stdout.write(key.decode())
                 sys.stdout.flush()
 
-        
+def confirm_action(message="Apakah kamu yakin?"):
+    """Konfirmasi aksi dengan Y/N"""
+    while True:
+        response = input_no_empty(f"{message} (y/n): ").strip().lower()
+        if response in ['y', 'ya', 'yes']:
+            return True
+        elif response in ['n', 'no', 'tidak']:
+            return False
+        else:
+            console.print("[red]Masukkan y atau n![/red]")

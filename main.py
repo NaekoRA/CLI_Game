@@ -1,14 +1,15 @@
 from engine.parser import parse_story
 from engine.runner import run_game
 from engine.save_system import SaveSystem
-from engine.utils import show_save_slots, select_save_slot, input_no_empty,pause
+from engine.utils import show_save_slots, select_save_slot, input_no_empty,pause,clear,confirm_action
 from datetime import datetime
 import sys
 
 def main_menu():
     save_system = SaveSystem()
-    
+    clear()
     while True:
+        clear()
         print("\n" + "="*50)
         print("🎮 GAME HORROR ADVENTURE")
         print("="*50)
@@ -32,6 +33,7 @@ def main_menu():
             print("Pilihan tidak valid!")
 
 def start_new_game(save_system):
+    clear()
     # Data awal game
     initial_data = {
         "current_chapter": 1,
@@ -58,6 +60,7 @@ def start_new_game(save_system):
         print("❌ Gagal membuat game baru")
 
 def load_game(save_system):
+    clear()
     save_files = show_save_slots(save_system)
     if save_files:
         selected_slot = select_save_slot(save_files)
@@ -70,6 +73,7 @@ def load_game(save_system):
                 print("❌ Gagal load game")
 
 def delete_save(save_system):
+    clear()
     save_files = show_save_slots(save_system)
     if save_files:
         selected_slot = select_save_slot(save_files)
@@ -81,28 +85,35 @@ def delete_save(save_system):
 
 def start_game(save_system, game_data, slot_name):
     print(f"\n🎯 Memulai Chapter {game_data['current_chapter']}...")
+    print(f"📍 Checkpoint: {game_data['checkpoint']}")
+    print(f"🎒 Inventory: {len(game_data['inventory'])} items")
+    print(f"❤️  Sanity: {game_data['player_stats']['sanity']}")
+    
+    pause("\nTekan Enter untuk memulai...")
     
     scenes = parse_story("story/chapter1.story")
     
-    # run_game bisa return game_data ATAU "game_over"
-    result = run_game(scenes, game_data, save_system, slot_name)
-    
-    # CEK JIKA HASILNYA "game_over"
-    if result == "game_over":
-        print("💀 Game Over! Kembali ke menu utama...")
-        pause("\nTekan Enter untuk kembali ke menu...")
-        return  # Langsung kembali ke menu, tidak save
-    
-    # JIKA NORMAL, result adalah updated_game_data
-    updated_game_data = result
-    updated_game_data["play_time"] += 120  # Tambah play time
+    # run_game sekarang selalu return game_data (tidak pernah string)
+    updated_game_data = run_game(scenes, game_data, save_system, slot_name)
     
     # Auto-save progress
+    updated_game_data["play_time"] += 120
     if save_system.create_save(updated_game_data, slot_name):
         print("💾 Progress tersimpan!")
     
+    # Cek jika sanity terlalu rendah
+    if updated_game_data["player_stats"]["sanity"] <= 0:
+        print("😵 Sanity kamu habis! Kamu menjadi gila dan dirawat di rumah sakit.")
+        print("💀 GAME OVER - Mental Breakdown")
+        # Option: reset sanity atau true game over
+        if confirm_action("Coba lagi dari checkpoint?"):
+            updated_game_data["player_stats"]["sanity"] = 50
+            save_system.create_save(updated_game_data, slot_name)
+            return start_game(save_system, updated_game_data, slot_name)
+        else:
+            return
+    
     pause("\nTekan Enter untuk kembali ke menu...")
-
 if __name__ == "__main__":
     try:
         main_menu()

@@ -1,29 +1,41 @@
-\scene start
+\scene start    
+\clear
+$green ===============================
+$green          TUTORIAL MAZE
+$green ===============================
+
+Sebelum melanjutkan, kamu harus belajar navigasi!
+Ini adalah maze sederhana untuk latihan.
+
+\maze map_name="tutorial" description="Learn basic movement in this simple maze"
+
+Setelah menyelesaikan maze, kamu merasa lebih percaya diri!
+\goto forest_escape
+
+\scene forest_escape
 \clear
 $yellow ===============================
-$yellow         BOSS BATTLE
+$yellow          ESCAPE THE FOREST
 $yellow ===============================
 
-Kamu bertemu dengan Hantu Guru yang menyeramkan!
-Dia ingin mengujimu dengan pertarungan.
+Kamu terjebak di hutan berhantu!
+Cari jalan keluar sebelum ditangkap hantu penjaga!
 
-\battle player_hp=120 enemy_hp=150 player_name="Kamu" enemy_name="Hantu Guru"
+\maze map_name="forest" description="Escape the haunted forest maze!"
 
-Setelah pertarungan sengit...
-\pause
+\battle_branch win=selamat_dari_hutan lose=tertangkap_di_hutan
 
-$green Kamu berhasil melewati ujian tersebut!
-Hantu Guru memberikan kunci rahasia.
-
-\goto next_scene
-
-\scene hard_battle
+\scene school_escape  
 \clear
 $red ===============================
-$red        BATTLE FINAL
+$red          SCHOOL LOCKDOWN
 $red ===============================
 
-Ini adalah pertarungan terakhirmu!
-Lawan sangat kuat, hati-hati!
+Sekolah dikunci! Kamu harus mencari jalan keluar
+dari koridor sekolah yang gelap.
 
-\battle player_hp=150 enemy_hp=200 player_name="Pahlawan" enemy_name="Bayangan Gelap"
+Hati-hati dengan satpam yang berpatroli!
+
+\maze map_name="school" description="Escape the school corridors!"
+
+\battle_branch win=keluar_sekolah lose=tertangkap_satpam
