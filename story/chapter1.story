@@ -7,8 +7,6 @@ $green ===============================
 Sebelum melanjutkan, kamu harus belajar navigasi!
 Ini adalah maze sederhana untuk latihan.
 
-\maze map_name="tutorial" description="Learn basic movement in this simple maze"
-
 Setelah menyelesaikan maze, kamu merasa lebih percaya diri!
 \goto forest_escape
 
