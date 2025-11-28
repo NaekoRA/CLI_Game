@@ -19,9 +19,9 @@ $yellow ===============================
 Kamu terjebak di hutan berhantu!
 Cari jalan keluar sebelum ditangkap hantu penjaga!
 
-\maze map_name="forest" description="Escape the haunted forest maze!"
+\maze map_name="forest" description="Escape the haunted forest maze!" win=selamat_dari_hutan lose=tertangkap_di_hutan
 
-\battle_branch win=selamat_dari_hutan lose=tertangkap_di_hutan
+\battle win=selamat_dari_hutan lose=tertangkap_di_hutan
 
 \scene school_escape  
 \clear
@@ -37,3 +37,9 @@ Hati-hati dengan satpam yang berpatroli!
 \maze map_name="school" description="Escape the school corridors!"
 
 \battle_branch win=keluar_sekolah lose=tertangkap_satpam
+
+\scene selamat_dari_hutan
+menang
+
+\scene tertangkap_di_hutan
+kalah

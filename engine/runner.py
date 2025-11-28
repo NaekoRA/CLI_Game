@@ -106,12 +106,14 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
                     continue
                 
             #maze handler
+            # Dalam run_game function, update maze handler:
             elif cmd["type"] == "maze":
                 console.print("\n" + "🧭" * 25, style="bold green")
                 console.print("        MAZE CHALLENGE START!", style="bold green")
                 console.print("🧭" * 25, style="bold green")
                 
                 config = cmd.get("config", {})
+                branches = cmd.get("branches", {})
                 map_name = config.get("map_name", "tutorial")
                 description = config.get("description", "Find your way through the maze!")
                 
@@ -132,14 +134,21 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
                     game_data["player_stats"]["sanity"] = max(0, game_data["player_stats"]["sanity"] - 10)
                     slow_print("💀 Kamu gagal dalam maze...")
                 
-                # Handle special finish codes
-                if result.startswith("F"):
-                    game_data["flags"]["maze_finish_code"] = result
+                # BRANCHING LOGIC - HANYA win dan lose
+                outcome = result.lower()  # "win" atau "lose"
                 
-                pause()
-                continue
-
+                # Cari branch target berdasarkan outcome
+                target_scene = branches.get(outcome)
                 
+                if target_scene:
+                    # Jika ada branch target, pindah scene
+                    next_scene = target_scene
+                    break
+                else:
+                    # Jika tidak ada branch, lanjut scene berikutnya
+                    pause()
+                    continue
+                            
         # AUTO-SAVE SETIAP SCENE BERUBAH
         if save_system and slot_name:
             save_system.create_save(game_data, slot_name)

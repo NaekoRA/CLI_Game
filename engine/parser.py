@@ -123,20 +123,25 @@ def parse_story(path: str):
             
             # Add maze command parsing
             if line.startswith("\\maze"):
-                # Format: \maze map_name="forest" description="Escape the forest!"
+                # Format: \maze map_name="forest" description="Escape!" win=success_scene lose=fail_scene
                 config = {}
+                branches = {}
                 parts = line.split()
                 
                 for part in parts[1:]:
                     if '=' in part:
                         key, value = part.split('=', 1)
-                        if value.startswith('"') and value.endswith('"'):
-                            value = value[1:-1]
-                        config[key] = value
+                        # Handle branch targets - HANYA win dan lose
+                        if key in ['win', 'lose']:
+                            branches[key] = value
+                        else:
+                            # Handle config values
+                            if value.startswith('"') and value.endswith('"'):
+                                value = value[1:-1]
+                            config[key] = value
                 
-                buffer.append({"type": "maze", "config": config})
+                buffer.append({"type": "maze", "config": config, "branches": branches})
                 continue
-            
     if current_scene is not None:
         scenes[current_scene] = buffer
     

@@ -1,4 +1,3 @@
-# Updated MazeGame with roaming and chasing AI
 import os
 import sys
 import time
@@ -33,9 +32,9 @@ class MazeGame:
         self.find_characters()
         self.steps = 0
 
-        # AI State
         self.state = "ROAMING"
         self.last_seen_time = 0
+        self.visited = {}
 
         self.last_output = ""
         self.screen_cleared = False
@@ -52,13 +51,11 @@ class MazeGame:
         return self.maze[y][x] == "█"
 
     def can_see_player(self):
-        # Safe: no enemy
         if not self.enemy:
             return False
         px, py = self.player
         ex, ey = self.enemy
 
-        # Vertical vision
         if px == ex:
             step = 1 if py > ey else -1
             for y in range(ey + step, py, step):
@@ -66,7 +63,6 @@ class MazeGame:
                     return False
             return True
 
-        # Horizontal vision
         if py == ey:
             step = 1 if px > ex else -1
             for x in range(ex + step, px, step):
@@ -105,23 +101,46 @@ class MazeGame:
         return None
 
     def move_enemy_chasing(self):
+        if not self.enemy:
+            return False
+        
         path = self.bfs(tuple(self.enemy), tuple(self.player))
         if not path:
             return False
         nx, ny = path[0]
         ex, ey = self.enemy
 
-        if [ex, ey] != self.player:
+        if self.maze[ey][ex] not in ["F", "P"]:
             self.maze[ey][ex] = " "
-        if [nx, ny] != self.player:
+        if self.maze[ny][nx] != "F" and [nx, ny] != self.player:
             self.maze[ny][nx] = "S"
         self.enemy[:] = [nx, ny]
         return True
 
+    def get_visit(self, x, y):
+        return self.visited.get((x, y), 0)
+
+    def add_visit(self, x, y):
+        self.visited[(x, y)] = self.get_visit(x, y) + 1
+
+    def decay_visits(self):
+        remove_keys = []
+        for k in self.visited:
+            self.visited[k] -= 0.02   
+            if self.visited[k] <= 0:
+                remove_keys.append(k)
+        for k in remove_keys:
+            del self.visited[k]
+
+        
     def move_enemy_roaming(self):
+        if not self.enemy:
+            return False
+        
         ex, ey = self.enemy
+        
         dirs = [(1,0), (-1,0), (0,1), (0,-1)]
-        random.shuffle(dirs)
+        candidates = []
 
         for dx, dy in dirs:
             nx, ny = ex + dx, ey + dy
@@ -129,13 +148,29 @@ class MazeGame:
                 0 <= nx < len(self.maze[ny]) and
                 not self.is_wall(nx, ny)):
 
-                if [ex, ey] != self.player:
-                    self.maze[ey][ex] = " "
-                if [nx, ny] != self.player:
-                    self.maze[ny][nx] = "S"
-                self.enemy[:] = [nx, ny]
-                return True
-        return False
+                visit_score = self.get_visit(nx, ny)
+                candidates.append(((nx, ny), visit_score))
+
+        if not candidates:
+            return False
+
+        min_visit = min(v for pos, v in candidates)
+        best_moves = [pos for pos, v in candidates if v == min_visit]
+
+        nx, ny = random.choice(best_moves)
+
+        self.add_visit(nx, ny)
+        self.decay_visits()
+
+        ex, ey = self.enemy
+        if self.maze[ey][ex] not in ["F", "P"]:
+            self.maze[ey][ex] = " " 
+        if self.maze[ny][nx] != "F" and [nx, ny] != self.player:
+            self.maze[ny][nx] = "S"
+        self.enemy[:] = [nx, ny]
+
+        return True
+
 
     def build_frame(self):
         lines = []
@@ -215,7 +250,7 @@ class MazeGame:
                     moved = True
 
             # Enemy AI
-            if now - last_enemy_time > enemy_delay:
+            if self.enemy and now - last_enemy_time > enemy_delay:
                 last_enemy_time = now
 
                 if self.can_see_player():
