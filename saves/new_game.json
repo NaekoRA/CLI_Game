@@ -1,26 +1,22 @@
 {
   "metadata": {
     "slot_name": "new_game",
-    "timestamp": "2025-11-28T16:42:49.206667",
+    "timestamp": "2025-12-01T14:57:28.235330",
     "version": "1.0"
   },
   "game_data": {
     "current_chapter": 1,
-    "current_scene": "selamat_dari_hutan",
-    "checkpoint": "selamat_dari_hutan",
+    "current_scene": "start",
+    "checkpoint": "start",
     "inventory": [],
     "choices_history": [],
     "player_stats": {
       "health": 100,
       "sanity": 100,
-      "discovered_secrets": 0,
-      "mazes_completed": 1
+      "discovered_secrets": 0
     },
-    "flags": {
-      "last_maze": "forest",
-      "last_maze_result": "WIN"
-    },
-    "play_time": 120,
-    "created_at": "2025-11-28T16:42:31.655570"
+    "flags": {},
+    "play_time": 0,
+    "created_at": "2025-12-01T14:57:28.235330"
   }
 }

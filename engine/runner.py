@@ -114,6 +114,7 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
                 
                 config = cmd.get("config", {})
                 branches = cmd.get("branches", {})
+                
                 map_name = config.get("map_name", "tutorial")
                 description = config.get("description", "Find your way through the maze!")
                 
@@ -121,34 +122,49 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
                 maze_map = MAZE_MAPS.get(map_name, MAZE_MAPS["tutorial"])
                 
                 # Start the maze game
-                result = MazeManager.start_maze(maze_map, description)
+                maze_result = MazeManager.start_maze(maze_map, description)
                 
-                # Update game state based on maze result
+                # Extract data dari dictionary
+                result = maze_result["result"]  # "WIN" atau "LOSE"
+                finish_id = maze_result["finish_id"]  # "F", "F1", "F2", None
+                steps = maze_result["steps"]
+                
+                # Update game state
                 game_data["flags"]["last_maze"] = map_name
                 game_data["flags"]["last_maze_result"] = result
+                game_data["flags"]["last_maze_steps"] = steps
+                game_data["flags"]["last_finish_id"] = finish_id
                 
                 if result == "WIN":
                     game_data["player_stats"]["mazes_completed"] = game_data["player_stats"].get("mazes_completed", 0) + 1
-                    slow_print("🎉 Kamu berhasil menyelesaikan maze!")
+                    
                 elif result == "LOSE":
-                    game_data["player_stats"]["sanity"] = max(0, game_data["player_stats"]["sanity"] - 10)
-                    slow_print("💀 Kamu gagal dalam maze...")
+                    game_data["player_stats"]["sanity"] = max(0, game_data["player_stats"]["sanity"] - 10)                
+                # BRANCHING LOGIC
+                target_scene = None
                 
-                # BRANCHING LOGIC - HANYA win dan lose
-                outcome = result.lower()  # "win" atau "lose"
+                # 1. Cari berdasarkan finish_id
+                if finish_id and finish_id in branches:
+                    target_scene = branches[finish_id]
                 
-                # Cari branch target berdasarkan outcome
-                target_scene = branches.get(outcome)
+                # 2. Fallback ke result (win/lose)
+                elif result.lower() in branches:
+                    target_scene = branches[result.lower()]
+                
+                # 3. Fallback ke default
+                elif "default" in branches:
+                    target_scene = branches["default"]
+                
+                # Jika tidak ada branch sama sekali
+                else:
+                    console.print("[red]✗ Tidak ada branch target yang ditemukan[/red]")
                 
                 if target_scene:
-                    # Jika ada branch target, pindah scene
                     next_scene = target_scene
                     break
                 else:
-                    # Jika tidak ada branch, lanjut scene berikutnya
-                    pause()
+                    pause("[cyan]Tekan Enter untuk melanjutkan...[/cyan]")
                     continue
-                            
         # AUTO-SAVE SETIAP SCENE BERUBAH
         if save_system and slot_name:
             save_system.create_save(game_data, slot_name)

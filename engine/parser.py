@@ -122,8 +122,9 @@ def parse_story(path: str):
                 continue
             
             # Add maze command parsing
+            # Di dalam parse_story function, bagian parsing \maze:
             if line.startswith("\\maze"):
-                # Format: \maze map_name="forest" description="Escape!" win=success_scene lose=fail_scene
+                # Format: \maze map_name="forest" description="Escape!" win=success_scene lose=fail_scene F1=scene_a F2=scene_b
                 config = {}
                 branches = {}
                 parts = line.split()
@@ -131,13 +132,21 @@ def parse_story(path: str):
                 for part in parts[1:]:
                     if '=' in part:
                         key, value = part.split('=', 1)
-                        # Handle branch targets - HANYA win dan lose
-                        if key in ['win', 'lose']:
+                        
+                        # Handle ALL branch targets - bukan cuma win/lose
+                        # Bisa berupa: win, lose, F, F1, F2, F3, default, dll
+                        if key in ['win', 'lose', 'draw', 'surrender', 'default']:
                             branches[key] = value
+                        elif key.startswith('F'):  # Tangkap F, F1, F2, F3, dst
+                            # Cek jika key adalah finish point (F atau F diikuti angka)
+                            if key == 'F' or (key.startswith('F') and key[1:].isdigit()):
+                                branches[key] = value
                         else:
                             # Handle config values
                             if value.startswith('"') and value.endswith('"'):
                                 value = value[1:-1]
+                            elif value.isdigit():
+                                value = int(value)
                             config[key] = value
                 
                 buffer.append({"type": "maze", "config": config, "branches": branches})
