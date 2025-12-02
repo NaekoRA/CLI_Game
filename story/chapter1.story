@@ -1,8 +1,20 @@
 \scene start
-\maze map_name="tutorial_maze" description="Pilih exit yang tepat!" F1=good_ending F2=bad_ending
+Selamat datang di Sekolah Misteri!
 
-\scene good_ending
-good
+\choice "Masuk ke dalam" goto hangman_challenge
+\choice "Keliling halaman" goto explore_yard
 
-\scene bad_ending
-bas
+\scene hangman_challenge
+Kamu menemukan papan tulis dengan permainan Hangman.
+Tebak kata untuk membuka pintu!
+
+\hangman words("secret","mystery","puzzle") win=door_open lose=trapped
+
+\scene door_open
+\clear
+🎉 Pintu terbuka! Kamu bisa melanjutkan.
+
+\progress 1 "Melanjutkan..."
+
+\scene explore_yard
+yard

@@ -151,6 +151,66 @@ def parse_story(path: str):
                 
                 buffer.append({"type": "maze", "config": config, "branches": branches})
                 continue
+            
+            if line.startswith("\\hangman"):
+                branches = {}
+                config = {"words": []}
+                
+                # Cari apakah ada words(...)
+                if "words(" in line:
+                    # Ekstrak words dari dalam parentheses
+                    start_idx = line.find("words(") + 6  # setelah "words("
+                    end_idx = line.find(")", start_idx)
+                    if end_idx != -1:
+                        words_str = line[start_idx:end_idx]
+                        # Parse kata-kata yang dipisahkan koma
+                        words = []
+                        current_word = ""
+                        in_quotes = False
+                        
+                        for char in words_str:
+                            if char == '"' or char == "'":
+                                in_quotes = not in_quotes
+                            elif char == ',' and not in_quotes:
+                                if current_word.strip():
+                                    words.append(current_word.strip())
+                                    current_word = ""
+                            else:
+                                current_word += char
+                        
+                        # Add last word
+                        if current_word.strip():
+                            words.append(current_word.strip())
+                        
+                        # Clean quotes from words
+                        clean_words = []
+                        for word in words:
+                            # Remove surrounding quotes if present
+                            if (word.startswith('"') and word.endswith('"')) or \
+                            (word.startswith("'") and word.endswith("'")):
+                                word = word[1:-1]
+                            clean_words.append(word)
+                        
+                        config["words"] = clean_words
+                        
+                        # Remove words(...) bagian dari line untuk parsing selanjutnya
+                        line = line.replace(f"words({words_str})", "").strip()
+                
+                # Parse sisanya untuk branches
+                parts = line.split()
+                
+                # Lewati "\hangman"
+                for part in parts[1:]:
+                    if '=' in part:
+                        key, value = part.split('=', 1)
+                        if key in ['win', 'lose']:
+                            branches[key] = value
+                        elif key == 'category':
+                            config['category'] = value
+                
+                buffer.append({"type": "hangman", "config": config, "branches": branches})
+                continue
+            
     if current_scene is not None:
         scenes[current_scene] = buffer
     

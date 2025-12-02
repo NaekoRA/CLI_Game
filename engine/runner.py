@@ -4,7 +4,7 @@ from rich.text import Text
 from rich.panel import Panel
 from engine.maze import MazeManager
 from maze_maps import MAZE_MAPS
-
+from engine.hangman import HangmanManager
 
 def run_game(scenes, game_data=None, save_system=None, slot_name=None):
     if game_data is None:
@@ -13,9 +13,7 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
             "current_scene": "start",
             "checkpoint": "start", 
             "inventory": [],
-            "choices_history": [],
-            "player_stats": {"health": 100, "sanity": 100, "discovered_secrets": 0},
-            "flags": {},
+            "choices_history": [],            "flags": {},
             "play_time": 0
         }
     
@@ -90,9 +88,7 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
                 if outcome == "win":
                     game_data["player_stats"]["battles_won"] = game_data["player_stats"].get("battles_won", 0) + 1
                 elif outcome == "lose":
-                    game_data["player_stats"]["battles_lost"] = game_data["player_stats"].get("battles_lost", 0) + 1
-                    game_data["player_stats"]["sanity"] = max(0, game_data["player_stats"]["sanity"] - 15)
-                
+                    game_data["player_stats"]["battles_lost"] = game_data["player_stats"].get("battles_lost", 0) + 1                
                 # Cari branch target berdasarkan outcome
                 target_scene = cmd["branches"].get(outcome)
                 
@@ -137,9 +133,7 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
                 
                 if result == "WIN":
                     game_data["player_stats"]["mazes_completed"] = game_data["player_stats"].get("mazes_completed", 0) + 1
-                    
-                elif result == "LOSE":
-                    game_data["player_stats"]["sanity"] = max(0, game_data["player_stats"]["sanity"] - 10)                
+
                 # BRANCHING LOGIC
                 target_scene = None
                 
@@ -164,6 +158,35 @@ def run_game(scenes, game_data=None, save_system=None, slot_name=None):
                     break
                 else:
                     pause("[cyan]Tekan Enter untuk melanjutkan...[/cyan]")
+                    continue
+                
+            # Update hangman handler:
+            elif cmd["type"] == "hangman":
+                console.print("\n" + "🎯" * 20, style="bold magenta")
+                console.print("       HANGMAN CHALLENGE", style="bold magenta")
+                console.print("🎯" * 20, style="bold magenta")
+                
+                branches = cmd.get("branches", {})
+                config = cmd.get("config", {})
+                
+                # Start the hangman game
+                result = HangmanManager.start_hangman(config)
+                
+                # Update game state
+                game_data["flags"]["last_hangman"] = result
+                game_data["flags"]["hangman_played"] = game_data["flags"].get("hangman_played", 0) + 1
+                
+                if result == "WIN":
+                    game_data["player_stats"]["games_won"] = game_data["player_stats"].get("games_won", 0) + 1                
+                # BRANCHING LOGIC
+                outcome = result.lower()  # "win" atau "lose"
+                target_scene = branches.get(outcome)
+                
+                if target_scene:
+                    next_scene = target_scene
+                    break
+                else:
+                    pause()
                     continue
         # AUTO-SAVE SETIAP SCENE BERUBAH
         if save_system and slot_name:
@@ -231,4 +254,3 @@ def add_items_based_on_scene(scene_name, game_data):
     
     # Update player stats
     game_data["player_stats"]["discovered_secrets"] += 1
-    game_data["player_stats"]["sanity"] = max(0, game_data["player_stats"]["sanity"] - 5)
