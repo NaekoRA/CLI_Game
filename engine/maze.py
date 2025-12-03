@@ -336,7 +336,12 @@ class MazeGame:
                 self.render()
 
             time.sleep(0.016)
+            
+
+        
+        
 class MazeManager:
+    
     @staticmethod
     def start_maze(map_data, description="Find your way through the maze!"):
         console.print(f"\n{description}", style="bold yellow")
@@ -358,3 +363,5 @@ class MazeManager:
             "finish_id": finish_id,
             "steps": maze_game.steps
         }
+        
+        

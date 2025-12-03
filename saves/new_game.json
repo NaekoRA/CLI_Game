@@ -1,31 +1,28 @@
 {
   "metadata": {
     "slot_name": "new_game",
-    "timestamp": "2025-12-02T14:57:29.914723",
+    "timestamp": "2025-12-03T16:32:55.235147",
     "version": "1.0"
   },
   "game_data": {
     "current_chapter": 1,
-    "current_scene": "hangman_challenge",
-    "checkpoint": "hangman_challenge",
+    "current_scene": "start",
+    "checkpoint": "start",
     "inventory": [],
-    "choices_history": [
-      {
-        "scene": "start",
-        "choice": "Masuk ke dalam",
-        "target": "hangman_challenge"
-      }
-    ],
+    "choices_history": [],
     "player_stats": {
       "health": 100,
-      "sanity": 85,
-      "discovered_secrets": 1
+      "sanity": 100,
+      "discovered_secrets": 0,
+      "mazes_completed": 1
     },
     "flags": {
-      "last_hangman": "LOSE",
-      "hangman_played": 1
+      "last_maze": "tutorial_maze",
+      "last_maze_result": "WIN",
+      "last_maze_steps": 187,
+      "last_finish_id": "F1"
     },
     "play_time": 120,
-    "created_at": "2025-12-02T14:56:50.942838"
+    "created_at": "2025-12-03T16:31:13.371164"
   }
 }

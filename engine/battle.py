@@ -305,3 +305,52 @@ class BattleManager:
         result = battle.run()
         
         return result
+    
+    
+def validate():
+    issues = []
+
+    # ====== 1. Cek BattleGame ======
+    BattleGame_cls = globals().get("BattleGame")
+    if not BattleGame_cls:
+        return fail("BattleGame class not found")
+
+    # Test instantiate
+    try:
+        battle = BattleGame_cls(100, 100)
+    except Exception as e:
+        return fail(f"BattleGame __init__ error: {e}")
+
+    # Cek method wajib
+    required = ["run", "display_ui", "process_turn", "check_winner", "enemy_ai"]
+    for m in required:
+        if not callable(getattr(battle, m, None)):
+            issues.append(f"❌ Missing or invalid method: {m}")
+
+    # Runtime test sederhana
+    test_methods = ["display_ui", "check_winner"]
+    for m in test_methods:
+        try:
+            getattr(battle, m)()
+        except Exception as e:
+            issues.append(f"⚠️ {m}() error: {e}")
+
+    # ====== 2. Cek BattleManager ======
+    if not hasattr(globals().get("BattleManager", None), "start_battle"):
+        issues.append("❌ BattleManager missing start_battle()")
+
+    # ====== Return result ======
+    ok = len(issues) == 0
+    return {
+        "ok": ok,
+        "issues": issues,
+        "status": "PASS" if ok else "FAIL"
+    }
+
+
+def fail(msg):
+    return {
+        "ok": False,
+        "issues": [f"❌ {msg}"],
+        "status": "FAIL"
+    }
