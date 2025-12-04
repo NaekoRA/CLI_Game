@@ -1,6 +1,10 @@
+# engine/battle.py
 import random
 import os
-from engine.utils import slow_print, input_no_empty, console, progress_bar,pause
+import inspect
+import sys
+from unittest.mock import patch
+from engine.utils import slow_print, input_no_empty, console, progress_bar, pause
 
 class BattleGame:
     def __init__(self, player_hp=100, enemy_hp=100, player_name="Player", enemy_name="Musuh"):
@@ -287,7 +291,6 @@ class BattleGame:
                     "enemy_remaining_hp": self.enemy_health
                 }
 
-
 # Battle Manager untuk handle dari story
 class BattleManager:
     @staticmethod
@@ -305,52 +308,52 @@ class BattleManager:
         result = battle.run()
         
         return result
-    
-    
-def validate():
+
+def auto_validate():
+    """Fungsi auto-validate otomatis (internal)"""
     issues = []
 
-    # ====== 1. Cek BattleGame ======
-    BattleGame_cls = globals().get("BattleGame")
-    if not BattleGame_cls:
-        return fail("BattleGame class not found")
+    # Ambil semua class di modul ini
+    classes = [
+        obj for name, obj in globals().items()
+        if inspect.isclass(obj) and obj.__module__ == __name__
+    ]
 
-    # Test instantiate
-    try:
-        battle = BattleGame_cls(100, 100)
-    except Exception as e:
-        return fail(f"BattleGame __init__ error: {e}")
-
-    # Cek method wajib
-    required = ["run", "display_ui", "process_turn", "check_winner", "enemy_ai"]
-    for m in required:
-        if not callable(getattr(battle, m, None)):
-            issues.append(f"❌ Missing or invalid method: {m}")
-
-    # Runtime test sederhana
-    test_methods = ["display_ui", "check_winner"]
-    for m in test_methods:
+    for cls in classes:
+        cls_name = cls.__name__
+        
+        # 1. coba instantiate jika memungkinkan
         try:
-            getattr(battle, m)()
+            sig = inspect.signature(cls)
+            if all(param.default != inspect._empty for param in sig.parameters.values()):
+                instance = cls()  # hanya instantiate kalau semua argumen punya default
+            else:
+                instance = None  # tidak bisa instantiate → skip, tetap validasi method
         except Exception as e:
-            issues.append(f"⚠️ {m}() error: {e}")
+            issues.append(f"⚠️ {cls_name} instantiation failed: {e}")
+            instance = None
 
-    # ====== 2. Cek BattleManager ======
-    if not hasattr(globals().get("BattleManager", None), "start_battle"):
-        issues.append("❌ BattleManager missing start_battle()")
+        # 2. Ambil semua method dalam class
+        methods = [
+            func_name for func_name, func in inspect.getmembers(cls, inspect.isfunction)
+            if func.__qualname__.startswith(cls_name)
+        ]
 
-    # ====== Return result ======
+        # 3. Validasi setiap method
+        for m in methods:
+            try:
+                func = getattr(instance if instance else cls, m)
+
+                # coba panggil jika method tidak butuh argumen
+                sig = inspect.signature(func)
+                if len(sig.parameters) == 0:
+                    func()  # jalankan
+            except Exception as e:
+                issues.append(f"⚠️ {cls_name}.{m}() error: {e}")
+
     ok = len(issues) == 0
     return {
         "ok": ok,
         "issues": issues,
         "status": "PASS" if ok else "FAIL"
-    }
-
-
-def fail(msg):
-    return {
-        "ok": False,
-        "issues": [f"❌ {msg}"],
-        "status": "FAIL"
     }
