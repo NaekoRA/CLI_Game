@@ -20,11 +20,11 @@ class BattleGame:
         self.game_over = False
         self.player_defending = False
 
-    def clear_screen(self):
+    def _clear_screen(self):
         os.system("cls" if os.name == "nt" else "clear")
 
-    def display_ui(self):
-        self.clear_screen()
+    def _display_ui(self):
+        self._clear_screen()
         console.print("=" * 60, style="bold cyan")
         console.print("           ⚔️  PERTARUNGAN TURN-BASED ⚔️", style="bold yellow")
         console.print("=" * 60, style="bold cyan")
@@ -60,7 +60,7 @@ class BattleGame:
         console.print(f"\n🔄 Turn: {self.turn_count}", style="bold")
         console.print("-" * 60, style="dim")
 
-    def display_moves(self):
+    def _display_moves(self):
         console.print("\n🎯 PILIH AKSI:", style="bold yellow")
         
         if self.player_charging > 0:
@@ -90,12 +90,12 @@ class BattleGame:
 
         return moves
 
-    def player_attack_fast(self):
+    def _player_attack_fast(self):
         damage = random.randint(15, 25)
         self.enemy_health -= damage
         return damage
 
-    def player_heal(self):
+    def _player_heal(self):
         heal_amount = random.randint(15, 25)
         self.player_health = min(self.player_max_health, self.player_health + heal_amount)
         return heal_amount
@@ -170,7 +170,7 @@ class BattleGame:
             player_message = "Pilihan tidak valid! Melewatkan turn."
 
         elif player_choice == "a":
-            damage = self.player_attack_fast()
+            damage = self._player_attack_fast()
             player_message = f"Anda menyerang cepat! ⚔️ {damage} damage!"
 
         elif player_choice == "b":
@@ -180,7 +180,7 @@ class BattleGame:
             player_message = self.player_defend()
 
         elif player_choice == "d":
-            heal_amount = self.player_heal()
+            heal_amount = self._player_heal()
             player_message = f"Anda memulihkan {heal_amount} HP! ❤️"
 
         elif player_choice == "e":
@@ -232,8 +232,8 @@ class BattleGame:
         console.print(f"\n⚔️  {self.player_name} vs {self.enemy_name}!", style="bold red")
         
         while not self.game_over:
-            self.display_ui()
-            available_moves = self.display_moves()
+            self._display_ui()
+            available_moves = self._display_moves()
             
             try:
                 if available_moves == ["continue"]:
@@ -253,7 +253,7 @@ class BattleGame:
             winner = self.check_winner()
             if winner:
                 self.game_over = True
-                self.display_ui()
+                self._display_ui()
 
                 if winner == "PLAYER":
                     console.print(f"\n🎉 VICTORY! {self.player_name} menang dalam {self.turn_count} turn!", style="bold green")
@@ -282,7 +282,7 @@ class BattleGame:
                     }
             
             if choice == "e":
-                self.display_ui()
+                self._display_ui()
                 console.print(f"\n🏳️  Anda menyerah! {self.enemy_name} menang!", style="red")
                 return {
                     "result": "SURRENDER",
@@ -309,51 +309,78 @@ class BattleManager:
         
         return result
 
-def auto_validate():
-    """Fungsi auto-validate otomatis (internal)"""
-    issues = []
+# ==============================
+# VALIDATOR FUNCTIONS
+# ==============================
 
-    # Ambil semua class di modul ini
-    classes = [
-        obj for name, obj in globals().items()
-        if inspect.isclass(obj) and obj.__module__ == __name__
-    ]
-
-    for cls in classes:
-        cls_name = cls.__name__
+def validate_engine():
+    """Validator utama - silent dan cepat"""
+    import sys
+    import os
+    
+    try:
+        # Backup original functions
+        import engine.utils as utils
+        import engine.battle as battle_module
         
-        # 1. coba instantiate jika memungkinkan
-        try:
-            sig = inspect.signature(cls)
-            if all(param.default != inspect._empty for param in sig.parameters.values()):
-                instance = cls()  # hanya instantiate kalau semua argumen punya default
-            else:
-                instance = None  # tidak bisa instantiate → skip, tetap validasi method
-        except Exception as e:
-            issues.append(f"⚠️ {cls_name} instantiation failed: {e}")
-            instance = None
-
-        # 2. Ambil semua method dalam class
-        methods = [
-            func_name for func_name, func in inspect.getmembers(cls, inspect.isfunction)
-            if func.__qualname__.startswith(cls_name)
+        # Simpan semua fungsi yang akan di-patch
+        backup = {}
+        funcs_to_patch = [
+            ('slow_print', lambda x, **k: None),
+            ('input_no_empty', lambda p="": "a"),
+            ('clear', lambda: None),
+            ('pause', lambda m=None: None),
+            ('divider', lambda *a, **k: None),
+            ('progress_bar', lambda *a, **k: None)
         ]
-
-        # 3. Validasi setiap method
-        for m in methods:
-            try:
-                func = getattr(instance if instance else cls, m)
-
-                # coba panggil jika method tidak butuh argumen
-                sig = inspect.signature(func)
-                if len(sig.parameters) == 0:
-                    func()  # jalankan
-            except Exception as e:
-                issues.append(f"⚠️ {cls_name}.{m}() error: {e}")
-
-    ok = len(issues) == 0
-    return {
-        "ok": ok,
-        "issues": issues,
-        "status": "PASS" if ok else "FAIL"
-    }
+        
+        # Patch utils
+        for name, replacement in funcs_to_patch:
+            if hasattr(utils, name):
+                backup[name] = getattr(utils, name)
+                setattr(utils, name, replacement)
+        
+        # Patch console.print
+        if hasattr(utils, 'console'):
+            backup['console_print'] = utils.console.print
+            utils.console.print = lambda *a, **k: None
+        
+        # Patch di battle module
+        for name, replacement in funcs_to_patch:
+            if hasattr(battle_module, name):
+                setattr(battle_module, name, replacement)
+        
+        # Patch os.system untuk clear_screen
+        backup_system = os.system
+        os.system = lambda c: None
+        
+        # Run battle
+        result = BattleManager.start_battle({
+            'player_hp': 30,
+            'enemy_hp': 30,
+            'player_name': 'Validator',
+            'enemy_name': 'TestBot'
+        })
+        
+        # Restore semua
+        for name, func in backup.items():
+            if name == 'console_print':
+                utils.console.print = func
+            else:
+                setattr(utils, name, func)
+        
+        os.system = backup_system
+        
+        # Validasi hasil
+        return {
+            "module": "battle",
+            "ok": isinstance(result, dict) and 'result' in result,
+            "result": result.get('result') if isinstance(result, dict) else None
+        }
+            
+    except Exception as e:
+        return {
+            "module": "battle",
+            "ok": False,
+            "error": f"{type(e).__name__}: {str(e)}"
+        }

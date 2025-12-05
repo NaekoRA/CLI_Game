@@ -365,3 +365,117 @@ class MazeManager:
         }
         
         
+
+# ==============================
+# VALIDATOR FUNCTIONS
+# ==============================
+
+def validate_engine():
+    """Validator maze - test 2 skenario utama"""
+    import sys
+    import os
+    import time
+    
+    try:
+        # Patch semua I/O
+        import engine.utils as utils
+        import engine.maze as maze_module
+        
+        # Backup dan patch
+        backups = {}
+        
+        # Patch fungsi utils
+        io_funcs = ['slow_print', 'input_no_empty', 'clear', 'pause', 'divider', 'progress_bar']
+        for func in io_funcs:
+            if hasattr(utils, func):
+                backups[func] = getattr(utils, func)
+                setattr(utils, func, lambda *a, **k: None)
+        
+        # Patch console
+        if hasattr(utils, 'console'):
+            backups['console'] = utils.console.print
+            utils.console.print = lambda *a, **k: None
+        
+        # Patch system clear
+        backups['system'] = os.system
+        os.system = lambda c: None
+        
+        # 1. TEST INSTANTIATION DAN METHOD DASAR
+        test_map = ["████", "█P █", "█ F█", "████"]
+        maze = MazeGame(test_map)
+        
+        # Test method dasar
+        basic_ok = all([
+            not maze.is_wall(1, 1),     # Posisi player
+            maze.is_finish(2, 2),       # Posisi finish
+            maze.get_finish_id(2, 2) == 'F'
+        ])
+        
+        if not basic_ok:
+            return {
+                "module": "maze",
+                "ok": False,
+                "error": "Basic method tests failed"
+            }
+        
+        # 2. TEST SCENARIO 1: SIMPLE FINISH
+        # Mock input sequence: d (kanan) untuk ke finish
+        key_seq = ['d', 'q']  # d=kanan, q=quit jika stuck
+        key_idx = [0]
+        
+        def mock_key():
+            if key_idx[0] < len(key_seq):
+                time.sleep(0.05)
+                k = key_seq[key_idx[0]]
+                key_idx[0] += 1
+                return k
+            return None
+        
+        # Patch get_key
+        if hasattr(maze_module, 'get_key'):
+            backups['get_key'] = maze_module.get_key
+            maze_module.get_key = mock_key
+        
+        result1 = MazeManager.start_maze(test_map, "Test finish")
+        
+        # 3. TEST SCENARIO 2: MAZE DENGAN ENEMY
+        enemy_map = ["██████", "█P  S█", "██████"]
+        key_idx[0] = 0
+        key_seq[:] = ['d', 'a', 'q']  # Kanan, kiri, quit
+        
+        result2 = MazeManager.start_maze(enemy_map, "Test enemy")
+        
+        # Restore semua
+        for name, func in backups.items():
+            if name == 'console':
+                utils.console.print = func
+            elif name == 'get_key':
+                maze_module.get_key = func
+            elif name == 'system':
+                os.system = func
+            else:
+                setattr(utils, name, func)
+        
+        # Validasi hasil
+        results_ok = all([
+            isinstance(result1, dict) and 'result' in result1,
+            isinstance(result2, dict) and 'result' in result2
+        ])
+        
+        return {
+            "module": "maze",
+            "ok": basic_ok and results_ok,
+            "results": {
+                "basic_tests": basic_ok,
+                "scenario1": result1.get('result') if isinstance(result1, dict) else None,
+                "scenario2": result2.get('result') if isinstance(result2, dict) else None
+            }
+        }
+            
+    except Exception as e:
+        return {
+            "module": "maze",
+            "ok": False,
+            "error": f"{type(e).__name__}: {str(e)}"
+        }
+        
