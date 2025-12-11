@@ -11,6 +11,7 @@ def validate_all_engines():
     # Daftar engine yang akan divalidasi
     engine_modules = [
         "battle",
+        "hangman",
         "maze", 
         "runner",
         "parser",

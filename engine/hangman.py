@@ -204,3 +204,115 @@ class HangmanGame:
                 return "LOSE"
         
         return "LOSE"
+    
+# ==============================
+# VALIDATOR FUNCTIONS
+# ==============================
+
+def validate_engine():
+    """Validator hangman - test dengan words pendek"""
+    import sys
+    import os
+    import builtins
+    
+    try:
+        # SUPPRESS ALL OUTPUT
+        import io
+        from contextlib import redirect_stdout, redirect_stderr
+        
+        with open(os.devnull, 'w') as fnull, \
+             redirect_stdout(fnull), \
+             redirect_stderr(fnull):
+            
+            # 1. MOCK SEMUA INPUT SUMBER
+            original_input = builtins.input
+            builtins.input = lambda prompt="": "a"  # Auto 'a'
+            
+            # 2. Patch semua I/O
+            import engine.utils as utils
+            import engine.hangman as hangman_module
+            
+            # Backup
+            backups = {}
+            
+            # 3. REPLACE input_no_empty() DI SEMUA TEMPAT
+            # Di utils module
+            if hasattr(utils, 'input_no_empty'):
+                backups['utils_input'] = utils.input_no_empty
+                utils.input_no_empty = lambda prompt="": "a"
+            
+            # Di hangman module (jika di-import langsung)
+            if hasattr(hangman_module, 'input_no_empty'):
+                backups['hangman_input'] = hangman_module.input_no_empty
+                hangman_module.input_no_empty = lambda prompt="": "a"
+            
+            # 4. PATCH FUNGSI OUTPUT LAINNYA
+            output_funcs = ['slow_print', 'clear', 'pause', 'divider', 'progress_bar']
+            for func in output_funcs:
+                if hasattr(utils, func):
+                    backups[func] = getattr(utils, func)
+                    setattr(utils, func, lambda *a, **k: None)
+            
+            # Patch console
+            if hasattr(utils, 'console'):
+                backups['console'] = utils.console.print
+                utils.console.print = lambda *a, **k: None
+            
+            # Patch os.system
+            backups['system'] = os.system
+            os.system = lambda c: None
+            
+            # 5. TEST DENGAN WORD "aaa" (auto win dengan 1 huruf)
+            test_words = ["aaa", "bbb", "ccc"]  # Semua huruf sama
+            
+            # Mock random
+            import random
+            original_random = random.choice
+            random.choice = lambda seq: "aaa"  # Selalu pilih "aaa"
+            
+            # 6. RUN HANGMAN
+            result = HangmanManager.start_hangman({"words": test_words})
+            
+            # 7. RESTORE
+            random.choice = original_random
+            builtins.input = original_input
+            
+            for name, func in backups.items():
+                if name == 'console':
+                    utils.console.print = func
+                elif name == 'system':
+                    os.system = func
+                elif name == 'utils_input':
+                    utils.input_no_empty = func
+                elif name == 'hangman_input':
+                    hangman_module.input_no_empty = func
+                elif hasattr(utils, name):
+                    setattr(utils, name, func)
+            
+            # 8. VALIDASI
+            if result == "WIN" or result == "LOSE":
+                return {
+                    "module": "hangman",
+                    "ok": True,
+                    "result": result
+                }
+            else:
+                return {
+                    "module": "hangman",
+                    "ok": False,
+                    "error": f"Invalid result: {result}"
+                }
+    
+    except Exception as e:
+        # Cleanup jika error
+        if 'original_input' in locals():
+            builtins.input = original_input
+        if 'original_random' in locals():
+            import random
+            random.choice = original_random
+            
+        return {
+            "module": "hangman",
+            "ok": False,
+            "error": f"{type(e).__name__}: {str(e)[:100]}"
+        }

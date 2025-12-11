@@ -215,3 +215,145 @@ def parse_story(path: str):
         scenes[current_scene] = buffer
     
     return scenes
+
+
+# ==============================
+# VALIDATOR FUNCTIONS
+# ==============================
+
+def validate_engine():
+    """Validator untuk parser.py"""
+    import sys
+    import os
+    import tempfile
+    
+    try:
+        # SUPPRESS ALL OUTPUT
+        import io
+        from contextlib import redirect_stdout, redirect_stderr
+        
+        with open(os.devnull, 'w') as fnull, \
+             redirect_stdout(fnull), \
+             redirect_stderr(fnull):
+            
+            # 1. CREATE TEST STORY FILE
+            test_story = """\\scene start
+$cyan === PARSER TEST ===
+This is a parser test.
+
+\\choice "Go to scene2" goto scene2
+\\choice "Go to end" goto end
+
+\\scene scene2
+\\bold This is bold text
+\\divider *
+\\pause "Press Enter..."
+\\progress 1 "Processing"
+\\goto end
+
+\\scene end
+$green ✅ PARSER TEST COMPLETE
+"""
+            
+            # Create temp file
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.story', delete=False, encoding='utf-8') as f:
+                f.write(test_story)
+                temp_path = f.name
+            
+            try:
+                # 2. TEST parse_story FUNCTION
+                import engine.parser as parser_module
+                
+                scenes = parser_module.parse_story(temp_path)
+                
+                # 3. VALIDATE PARSED STRUCTURE
+                required_scenes = ["start", "scene2", "end"]
+                scene_check = all(scene in scenes for scene in required_scenes)
+                
+                # Check scene content
+                content_check = True
+                errors = []
+                
+                if "start" in scenes:
+                    start_cmds = scenes["start"]
+                    # Should have color text and 2 choices
+                    color_cmd = [c for c in start_cmds if c.get("type") == "color"]
+                    choice_cmds = [c for c in start_cmds if c.get("type") == "choice"]
+                    
+                    if len(color_cmd) != 1:
+                        content_check = False
+                        errors.append("Missing color command in start scene")
+                    if len(choice_cmds) != 2:
+                        content_check = False
+                        errors.append(f"Expected 2 choices in start, got {len(choice_cmds)}")
+                
+                if "scene2" in scenes:
+                    scene2_cmds = scenes["scene2"]
+                    cmd_types = [c.get("type") for c in scene2_cmds]
+                    expected_types = ["bold", "divider", "pause", "progress", "goto"]
+                    
+                    for expected in expected_types:
+                        if expected not in cmd_types:
+                            content_check = False
+                            errors.append(f"Missing {expected} command in scene2")
+                
+                # 4. TEST WITH SPECIAL COMMANDS
+                special_story = """\\scene test
+\\battle player_hp=50 enemy_hp=50 win=win_scene lose=lose_scene
+\\maze map_name="test" description="Test" win=win_maze lose=lose_maze F1=finish1
+\\hangman category="horror" win=win_hangman lose=lose_hangman
+"""
+                
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.story', delete=False, encoding='utf-8') as f:
+                    f.write(special_story)
+                    special_path = f.name
+                
+                try:
+                    special_scenes = parser_module.parse_story(special_path)
+                    
+                    if "test" in special_scenes:
+                        test_cmds = special_scenes["test"]
+                        special_cmd_types = [c.get("type") for c in test_cmds]
+                        
+                        # Check for battle, maze, hangman commands
+                        if "battle" not in special_cmd_types:
+                            content_check = False
+                            errors.append("Battle command not parsed")
+                        if "maze" not in special_cmd_types:
+                            content_check = False
+                            errors.append("Maze command not parsed")
+                        if "hangman" not in special_cmd_types:
+                            content_check = False
+                            errors.append("Hangman command not parsed")
+                finally:
+                    if os.path.exists(special_path):
+                        os.unlink(special_path)
+                
+                # 5. FINAL VALIDATION
+                ok = scene_check and content_check
+                
+                result_info = {
+                    "scenes_found": len(scenes),
+                    "scene_names": list(scenes.keys())
+                }
+                
+                if not ok and errors:
+                    result_info["errors"] = errors
+                
+                return {
+                    "module": "parser",
+                    "ok": ok,
+                    "result": result_info
+                }
+                
+            finally:
+                # Cleanup temp file
+                if os.path.exists(temp_path):
+                    os.unlink(temp_path)
+    
+    except Exception as e:
+        return {
+            "module": "parser",
+            "ok": False,
+            "error": f"{type(e).__name__}: {str(e)[:100]}"
+        }

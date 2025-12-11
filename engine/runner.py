@@ -254,3 +254,167 @@ def add_items_based_on_scene(scene_name, game_data):
     
     # Update player stats
     game_data["player_stats"]["discovered_secrets"] += 1
+    
+
+# ==============================
+# VALIDATOR FUNCTIONS
+# ==============================
+
+def validate_engine():
+    """Validator untuk runner.py"""
+    import sys
+    import os
+    import builtins
+    
+    try:
+        # SUPPRESS ALL OUTPUT
+        import io
+        from contextlib import redirect_stdout, redirect_stderr
+        
+        with open(os.devnull, 'w') as fnull, \
+             redirect_stdout(fnull), \
+             redirect_stderr(fnull):
+            
+            # MOCK BUILTINS INPUT
+            original_input = builtins.input
+            builtins.input = lambda prompt="": "a"
+            
+            # IMPORT ENGINE MODULES
+            import engine.utils as utils
+            import engine.runner as runner_module
+            import engine.battle
+            import engine.maze
+            import engine.hangman
+            
+            # Backup
+            backups = {}
+            
+            # 1. PATCH UTILS FUNCTIONS - INCLUDING DIRECT REFERENCE
+            io_funcs = ['slow_print', 'input_no_empty', 'clear', 'pause', 'divider', 'progress_bar']
+            for func in io_funcs:
+                if hasattr(utils, func):
+                    backups[func] = getattr(utils, func)
+                    # GANTI SEMUA dengan lambda yang return 'a'
+                    setattr(utils, func, lambda *a, **k: None)
+            
+            # OVERRIDE input_no_empty KHUSUS
+            backups['input_no_empty_special'] = utils.input_no_empty
+            utils.input_no_empty = lambda prompt="": "a"
+            
+            # Juga patch di runner module jika ada reference langsung
+            if hasattr(runner_module, 'input_no_empty'):
+                backups['runner_input'] = runner_module.input_no_empty
+                runner_module.input_no_empty = lambda prompt="": "a"
+            
+            # Patch console
+            if hasattr(utils, 'console'):
+                backups['console'] = utils.console.print
+                utils.console.print = lambda *a, **k: None
+            
+            # 2. PATCH DEPENDENCIES
+            backups['battle_start'] = engine.battle.BattleManager.start_battle
+            engine.battle.BattleManager.start_battle = lambda config=None: {
+                "result": "WIN",
+                "turns": 3
+            }
+            
+            backups['maze_start'] = engine.maze.MazeManager.start_maze
+            engine.maze.MazeManager.start_maze = lambda map_data, desc=None: {
+                "result": "WIN",
+                "finish_id": "F",
+                "steps": 10
+            }
+            
+            backups['hangman_start'] = engine.hangman.HangmanManager.start_hangman
+            engine.hangman.HangmanManager.start_hangman = lambda config=None: "WIN"
+            
+            if hasattr(runner_module, 'MAZE_MAPS'):
+                backups['maze_maps'] = runner_module.MAZE_MAPS
+                runner_module.MAZE_MAPS = {
+                    "tutorial": ["████", "█P █", "█ F█", "████"]
+                }
+            
+            # Patch os.system
+            backups['system'] = os.system
+            os.system = lambda c: None
+            
+            # 3. CREATE TEST SCENES TANPA CHOICES (skip input)
+            test_scenes = {
+                "start": [
+                    {"type": "text", "text": "Test scene 1"},
+                    {"type": "goto", "target": "end"}  # Langsung goto, skip choices
+                ],
+                "end": [
+                    {"type": "text", "text": "Test completed"}
+                ]
+            }
+            
+            # 4. TEST RUN_GAME
+            game_data = {
+                "current_chapter": 1,
+                "current_scene": "start",
+                "checkpoint": "start",
+                "inventory": [],
+                "choices_history": [],
+                "flags": {},
+                "play_time": 0,
+                "player_stats": {
+                    "discovered_secrets": 0,
+                    "battles_won": 0,
+                    "mazes_completed": 0,
+                    "games_won": 0,
+                    "battles_lost": 0
+                }
+            }
+            
+            result = runner_module.run_game(test_scenes, game_data)
+            
+            # 5. VALIDASI
+            ok = isinstance(result, dict) and "current_scene" in result
+            
+            # 6. RESTORE
+            builtins.input = original_input
+            
+            # Restore battle
+            if 'battle_start' in backups:
+                engine.battle.BattleManager.start_battle = backups['battle_start']
+            
+            if 'maze_start' in backups:
+                engine.maze.MazeManager.start_maze = backups['maze_start']
+            
+            if 'hangman_start' in backups:
+                engine.hangman.HangmanManager.start_hangman = backups['hangman_start']
+            
+            if 'maze_maps' in backups:
+                runner_module.MAZE_MAPS = backups['maze_maps']
+            
+            if 'runner_input' in backups:
+                runner_module.input_no_empty = backups['runner_input']
+            
+            # Restore utils
+            for name, func in backups.items():
+                if name == 'console':
+                    utils.console.print = func
+                elif name == 'system':
+                    os.system = func
+                elif name == 'input_no_empty_special':
+                    utils.input_no_empty = func
+                elif name in io_funcs and hasattr(utils, name):
+                    setattr(utils, name, func)
+            
+            return {
+                "module": "runner",
+                "ok": ok,
+                "result": result.get("current_scene") if ok else None
+            }
+    
+    except Exception as e:
+        # Restore input jika error
+        if 'original_input' in locals():
+            builtins.input = original_input
+        return {
+            "module": "runner",
+            "ok": False,
+            "error": f"{type(e).__name__}: {str(e)[:100]}"
+        }
+        
