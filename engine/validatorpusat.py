@@ -15,7 +15,6 @@ def validate_all_engines():
         "maze", 
         "runner",
         "parser",
-        "utils"
     ]
     
     for module_name in engine_modules:

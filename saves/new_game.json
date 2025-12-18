@@ -1,7 +1,7 @@
 {
   "metadata": {
     "slot_name": "new_game",
-    "timestamp": "2025-12-03T16:32:55.235147",
+    "timestamp": "2025-12-17T12:16:28.793287",
     "version": "1.0"
   },
   "game_data": {
@@ -13,16 +13,10 @@
     "player_stats": {
       "health": 100,
       "sanity": 100,
-      "discovered_secrets": 0,
-      "mazes_completed": 1
+      "discovered_secrets": 0
     },
-    "flags": {
-      "last_maze": "tutorial_maze",
-      "last_maze_result": "WIN",
-      "last_maze_steps": 187,
-      "last_finish_id": "F1"
-    },
-    "play_time": 120,
-    "created_at": "2025-12-03T16:31:13.371164"
+    "flags": {},
+    "play_time": 0,
+    "created_at": "2025-12-17T12:16:28.793287"
   }
 }
